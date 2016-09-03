@@ -1,6 +1,22 @@
 import os, time
-
 import datetime
+
+class GetFileList:
+    def get_all_files(self, path, mask):
+        file_list = []
+        # traverse dir
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                if False == name.endswith(mask):
+                    continue
+
+
+                fullpath = os.path.join(root, name)
+                # print(fullpath)
+                file_list.append(fullpath)
+
+        return file_list
+
 
 class HeaderCreator:
 
@@ -26,34 +42,31 @@ class HeaderCreator:
             f.write(line.lstrip('\r\n') + '\n' + content)
 
     def add_header(self, path, mask, author, copyright):
-        # traverse dir
-        for root, dirs, files in os.walk(path):
-            for name in files:
-                if False == name.endswith(mask):
-                    continue
+        file_list = GetFileList()
+        files = file_list.get_all_files(path, mask)
 
-                fullpath = os.path.join(root, name)
-                f = open(fullpath, 'r')
+        for file in files:
+            f = open(file, 'r')
 
-                # skip empty lines
-                f.seek(0)
+            # skip empty lines
+            f.seek(0)
+            line = f.readline().strip()
+
+            while line == "":
                 line = f.readline().strip()
+            f.close()
 
-                while line == "":
-                    line = f.readline().strip()
-                f.close()
+            # insert new header
+            if line.find(self.header_anchor) == -1:
+                create_date = datetime.datetime.strptime(time.ctime(os.path.getctime(file)), "%a %b %d %H:%M:%S %Y")
 
-                # insert new header
-                if line.find(self.header_anchor) == -1:
-                    create_date = datetime.datetime.strptime(time.ctime(os.path.getctime(fullpath)), "%a %b %d %H:%M:%S %Y")
+                copy_header = self.template_header
+                copy_header = copy_header.replace("{author}", author)
+                copy_header = copy_header.replace("{date}", create_date.strftime("%d.%m.%Y"))
+                copy_header = copy_header.replace("{filename}", file[file.rfind("/")+1:])
+                copy_header = copy_header.replace("{copyright}", copyright)
 
-                    copy_header = self.template_header
-                    copy_header = copy_header.replace("{author}", author)
-                    copy_header = copy_header.replace("{date}", create_date.strftime("%d.%m.%Y"))
-                    copy_header = copy_header.replace("{filename}", name)
-                    copy_header = copy_header.replace("{copyright}", copyright)
-
-                    self.__add_header(fullpath, copy_header)
+                self.__add_header(file, copy_header)
 
 
 def main():
