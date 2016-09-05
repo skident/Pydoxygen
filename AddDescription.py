@@ -10,26 +10,40 @@ class GetFileList:
                 if False == name.endswith(mask):
                     continue
 
-
                 fullpath = os.path.join(root, name)
                 # print(fullpath)
-                file_list.append(fullpath)
+                file_list.append(fullpath.replace("\\", "/"))
 
         return file_list
 
+class ProgressBar:
+    def __init__(self, count):
+        if count > 0:
+            self.step = 100 / count
+        else:
+            self.step = 100
+        self.progress = 0
+
+    def next_step(self):
+        if self.progress < 100:
+            self.progress += self.step
+
+        if self.progress > 100:
+            self.progress = 100
+
+        return self.progress
+
+    def reset(self):
+        self.progress = 0
 
 class HeaderCreator:
 
     template_header = """
 /*! \\file       {filename}
  *  \\brief      Brief description.
- *              Brief description continued.
- *
- *  Detailed description starts here.
- *
  *  \\author     {author}
  *  \\date       {date}
- *  \\copyright  Skident Inc.
+ *  \\copyright  {copyright}
  */
 """
 
@@ -44,6 +58,8 @@ class HeaderCreator:
     def add_header(self, path, mask, author, copyright):
         file_list = GetFileList()
         files = file_list.get_all_files(path, mask)
+
+        progressBar = ProgressBar(len(files))
 
         for file in files:
             f = open(file, 'r')
@@ -68,12 +84,17 @@ class HeaderCreator:
 
                 self.__add_header(file, copy_header)
 
+            progress = progressBar.next_step()
+            print("[" + str(progress) + "%]")
 
 def main():
-    path = "/Users/skident/Documents/Projects/C++/CppHelpers/"
+    path = os.getcwd().replace("\\", "/")
     mask = (".c", ".cpp", ".h", ".hpp")
 
     header_creator = HeaderCreator()
-    header_creator.add_header(path, mask, "Skident", "Skident Inc.")
+
+    print("Start to add headers")
+    header_creator.add_header(path, mask, "Skident", "Skident inc.")
+    print("Process have finished")
 
 main()
