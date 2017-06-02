@@ -1,5 +1,6 @@
 # Pydoxygen
-Add the description of file in the top of file if it does not exist.
+Script which collects info about source file and generates doxygen header for each file. If such description is already exist, script will skip this source file.
+
 This script adds the info in doxygen format for C\C++ languages (it can be changed for another languages).
 
 At first the script checks for presence another doxygen comment in the top of the file. If no any header in the file then script will add its own header, like this:
